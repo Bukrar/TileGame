@@ -7,10 +7,12 @@ public class Player : MonoBehaviour
     [SerializeField] float runSpeed = 5f;
     [SerializeField] float jumpSpeed = 28f;
     [SerializeField] float climbSpeed = 8f;
+    [SerializeField] Vector2 deathKick = new Vector2(25f, 25f);
 
     Rigidbody2D myRigidbody;
     Animator myAnimator;
-    Collider2D mycollider2D;
+    CapsuleCollider2D capsuleCollider2D;
+    BoxCollider2D boxCollider2D;
     float gravityScaleAtStart;
 
     bool isAlive = true;
@@ -20,16 +22,20 @@ public class Player : MonoBehaviour
     {
         myRigidbody = GetComponent<Rigidbody2D>();
         myAnimator = GetComponent<Animator>();
-        mycollider2D = GetComponent<Collider2D>();
+        capsuleCollider2D = GetComponent<CapsuleCollider2D>();
+        boxCollider2D = GetComponent<BoxCollider2D>();
         gravityScaleAtStart = myRigidbody.gravityScale;
     }
 
     void Update()
     {
+        if (!isAlive) { return; }
+
         Run();
         ClimbLadder();
         Jump();
         FlipSprite();
+        Die();
     }
 
     private void Run()
@@ -44,7 +50,7 @@ public class Player : MonoBehaviour
 
     private void ClimbLadder()
     {
-        if (!mycollider2D.IsTouchingLayers(LayerMask.GetMask("Climb")))
+        if (!boxCollider2D.IsTouchingLayers(LayerMask.GetMask("Climb")))
         {
             myAnimator.SetBool("Climbing", false);
             myRigidbody.gravityScale = gravityScaleAtStart;
@@ -62,13 +68,23 @@ public class Player : MonoBehaviour
 
     private void Jump()
     {
-        if (!mycollider2D.IsTouchingLayers(LayerMask.GetMask("Ground"))) { return; }
+        if (!boxCollider2D.IsTouchingLayers(LayerMask.GetMask("Ground"))) { return; }
 
         if (Input.GetButtonDown("Vertical"))
         {
             float controlThrow = Input.GetAxis("Vertical");
             Vector2 jumpVelocityToAdd = new Vector2(0f, controlThrow > 0 ? jumpSpeed : -jumpSpeed);
             myRigidbody.velocity += jumpVelocityToAdd;
+        }
+    }
+
+    private void Die()
+    {
+        if (boxCollider2D.IsTouchingLayers(LayerMask.GetMask("Enemy")))
+        {
+            isAlive = false;
+            myAnimator.SetTrigger("Diing");
+            GetComponent<Rigidbody2D>().velocity = deathKick;
         }
     }
 
