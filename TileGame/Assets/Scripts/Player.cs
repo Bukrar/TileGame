@@ -4,8 +4,14 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
+    [SerializeField] float runSpeed = 5f;
+    [SerializeField] float jumpSpeed = 28f;
+    [SerializeField] float climbSpeed = 8f;
+
     Rigidbody2D myRigidbody;
     Animator myAnimator;
+    Collider2D mycollider2D;
+    float gravityScaleAtStart;
 
     bool isAlive = true;
 
@@ -14,22 +20,56 @@ public class Player : MonoBehaviour
     {
         myRigidbody = GetComponent<Rigidbody2D>();
         myAnimator = GetComponent<Animator>();
+        mycollider2D = GetComponent<Collider2D>();
+        gravityScaleAtStart = myRigidbody.gravityScale;
     }
 
     void Update()
     {
         Run();
+        ClimbLadder();
+        Jump();
         FlipSprite();
     }
 
     private void Run()
     {
         float controlThrow = Input.GetAxis("Horizontal");
-        Vector2 playervelocity = new Vector2(controlThrow * 5f, myRigidbody.velocity.y);
+        Vector2 playervelocity = new Vector2(controlThrow * runSpeed, myRigidbody.velocity.y);
         myRigidbody.velocity = playervelocity;
 
         bool playerHasHorizontalSpeed = Mathf.Abs(myRigidbody.velocity.x) > Mathf.Epsilon;
         myAnimator.SetBool("Running", playerHasHorizontalSpeed);
+    }
+
+    private void ClimbLadder()
+    {
+        if (!mycollider2D.IsTouchingLayers(LayerMask.GetMask("Climb")))
+        {
+            myAnimator.SetBool("Climbing", false);
+            myRigidbody.gravityScale = gravityScaleAtStart;
+            return;
+        }
+
+        float controlThrow = Input.GetAxis("Vertical");
+        Vector2 climbVelocity = new Vector2(myRigidbody.velocity.x, controlThrow * climbSpeed);
+        myRigidbody.velocity = climbVelocity;
+        myRigidbody.gravityScale = 0F;
+
+        bool playerHasVerticalSpeed = Mathf.Abs(myRigidbody.velocity.y) > Mathf.Epsilon;
+        myAnimator.SetBool("Climbing", playerHasVerticalSpeed);
+    }
+
+    private void Jump()
+    {
+        if (!mycollider2D.IsTouchingLayers(LayerMask.GetMask("Ground"))) { return; }
+
+        if (Input.GetButtonDown("Vertical"))
+        {
+            float controlThrow = Input.GetAxis("Vertical");
+            Vector2 jumpVelocityToAdd = new Vector2(0f, controlThrow > 0 ? jumpSpeed : -jumpSpeed);
+            myRigidbody.velocity += jumpVelocityToAdd;
+        }
     }
 
     private void FlipSprite()

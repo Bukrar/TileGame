@@ -11,8 +11,8 @@ TagManager:
   - 
   - Water
   - UI
-  - 
-  - 
+  - Ground
+  - Climb
   - 
   - 
   - 
@@ -43,6 +43,9 @@ TagManager:
     locked: 0
   - name: BackGround
     uniqueID: 3262488069
+    locked: 0
+  - name: Climb
+    uniqueID: 3163682553
     locked: 0
   - name: Player
     uniqueID: 3076862047
